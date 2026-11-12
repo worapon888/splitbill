@@ -16,7 +16,9 @@
     "format:check:prettier": "prettier --check \"frontend/**/*.{ts,tsx,js,jsx,mjs,json,css}\" \"*.{json,yaml,yml,md}\" \"docs/**/*.md\"",
     "typecheck": "npm --prefix frontend run typecheck",
     "seed": "uv run --directory backend python -m app.db.seed",
-    "test": "uv run --project backend pytest backend/tests"
+    "test:backend": "uv run --project backend pytest backend/tests",
+    "test:frontend": "npm --prefix frontend test",
+    "test": "npm run test:backend && npm run test:frontend"
   },
   "devDependencies": {
     "husky": "^9.1.7",

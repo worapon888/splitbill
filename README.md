@@ -613,4 +613,65 @@ Expense creation supports the optional `Idempotency-Key` header:
 - [x] **Phase 1**: Monorepo initialization, requirements analysis (`docs/implementation-plan.md`), PostgreSQL 16 Docker Compose setup, FastAPI skeleton with `/health`, SQLAlchemy 2.0 + Alembic wiring, Next.js TypeScript + Tailwind CSS initialization, and Husky + `lint-staged` + Ruff + ESLint + Prettier pre-commit automation.
 - [x] **Phase 2**: Database schema models (`users`, `groups`, `group_members`, `expenses`, `expense_shares`), Alembic migrations, idempotent seed data (`alice`, `bob`, `carol`, `dan`; Groups 1 & 2), and isolated test suite covering all 10 schema integrity areas.
 - [x] **Phase 3**: All 6 REST API endpoints (`GET /groups`, `GET /groups/{id}`, `POST /groups/{id}/expenses`, `GET /groups/{id}/expenses`, `DELETE /groups/{id}/expenses/{id}`, `GET /groups/{id}/balances`), satang remainder allocation, zero-sum balances, ACID concurrent idempotency handling, payer-only soft deletion, and 25 comprehensive automated tests.
-- [ ] **Phase 4**: Next.js shared-expense interface, live satang split preview, and API integration.
+- [x] **Phase 4**: Next.js shared-expense interface, live satang split preview, typed API client with non-member/auth handling, idempotent retry lifecycle, payer-only deletion with confirmation, zero-sum verification banner, Vitest suite (25 tests), and verified production build.
+
+---
+
+## Frontend Application (Phase 4)
+
+The SplitBill frontend is built with **Next.js 15 (App Router)**, **React 19**, **TypeScript**, and **Tailwind CSS v4**. It interacts directly with the FastAPI REST API.
+
+### Features & User Workflows
+
+1. **Active User Simulation (`X-User` Header)**:
+   - Quick switcher between seeded users (`alice`, `bob`, `carol`, `dan`).
+   - Dynamically re-fetches groups accessible only to the active user.
+   - Cleanses state upon switching users to prevent cross-account data leakage.
+
+2. **Group Management & Switching**:
+   - Lists only groups where the active user is a registered member (`GET /groups`).
+   - Automatically loads group member roster (`GET /groups/{id}`), active balances, and expense history.
+   - Empty state gracefully handles users with no groups (e.g. Dan when not in Chiang Mai trip).
+
+3. **Satang-Accurate Live Split Preview**:
+   - Zero JavaScript floating point errors: calculated entirely in integer satang (`1 THB = 100 satang`).
+   - **Equal Split**: Automatically calculates quotient satang and distributes remainder satang (0.01 at a time) strictly matching backend order-based remainder rules.
+   - **Exact Split**: Real-time validation verifying $\sum \text{shares} = \text{total}$. Displays live allocation status (unallocated / over-allocated) and disables submission until exactly zero difference is reached.
+
+4. **Member Balances & Zero-Sum Invariant Card**:
+   - Renders net balance for each group member with visual indicators:
+     - Positive balance (+฿X.XX): member gets back money (green badge).
+     - Negative balance (-฿X.XX): member owes money (rose badge).
+     - Zero balance (฿0.00): settled up (neutral badge).
+   - Real-time client-side badge verifying $\sum \text{balances} = 0.00$ THB.
+
+5. **Reverse-Chronological Expense Feed & Payer Deletion**:
+   - Lists all non-deleted expenses ordered newest first (`GET /groups/{id}/expenses`).
+   - Shows detailed share breakdown for every participant.
+   - **Payer-Only Deletion**: The delete button is rendered **only** when `currentUser === expense.paid_by`. Non-payers cannot see or click delete.
+   - Two-step inline confirmation prevents accidental deletions.
+   - Deleting an expense immediately refreshes expenses and balances without full page reload.
+
+6. **Idempotent Retry & Error Resilience**:
+   - Generates client-side UUID idempotency key on form initialization.
+   - Automatically retains the key on network errors or validation failures, allowing safe retry without creating duplicate expenses.
+   - Generates a fresh key only after a successful expense creation.
+   - Displays clear, contextual error banners for backend 4xx/5xx responses or network failures.
+
+### Frontend Environment Variables
+
+Create `frontend/.env.local` (or copy from `frontend/.env.example`):
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+### Running Frontend Tests
+
+```bash
+# Run all frontend tests via Vitest
+npm run test:frontend
+
+# Or directly in frontend folder
+cd frontend && npm test
+```

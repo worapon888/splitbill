@@ -222,6 +222,69 @@ During Phase 3 implementation, the following real technical errors were detected
 
 ---
 
-## 13. Known Limitations (Phase 3)
+## 13. Scope of AI Assistance in Phase 4
 
-- Frontend UI components for group switching, live split preview, and expense entry are scheduled for **Phase 4**.
+In **Phase 4 (Frontend Single-Page Application & API Integration)**, AI assistance was used for:
+
+1. **Architecture & Component Decomposition**:
+   - Designing a cohesive, accessible single-page layout in `frontend/src/app/page.tsx` integrating user switching, group selection, balance calculation, live expense creation, and reverse-chronological transaction history.
+   - Decomposing presentation into modular components: `UserSelector`, `GroupSelector`, `BalancesCard`, `ExpenseForm`, `ExpenseList`, and `AlertBanner`.
+2. **Pure Integer Satang Money Utilities (`src/lib/money.ts`)**:
+   - Designing mathematical operations strictly using integer satang ($1\text{ THB} = 100\text{ satang}$) with zero `parseFloat` / `Number` math.
+   - Implementing order-based remainder distribution for equal splits: $B = \lfloor T / N \rfloor, R = T \pmod N$. First $R$ members receive $B + 1$ satang.
+   - Implementing exact split validation and unallocated/over-allocated difference tracking.
+3. **Typed API Client (`src/lib/api.ts`)**:
+   - Connecting to all 6 backend endpoints with explicit typing, `X-User` header injection, and `Idempotency-Key` header support.
+   - Normalizing backend error responses (handling both string details and Pydantic validation error arrays).
+4. **Automated Testing Suite (`src/__tests__/`)**:
+   - Creating 25 automated frontend tests in Vitest covering satang parsing, formatting, equal split math, exact split validation, component rendering, payer-only delete permissions, and inline delete confirmation.
+
+---
+
+## 14. Detection & Correction of Suboptimal / Unsafe AI Output (Phase 4)
+
+During Phase 4 implementation, the following technical issues were identified, debugged, and resolved:
+
+1. **Vitest Module Resolution & Path Aliasing**:
+   - _Issue_: Vitest failed to resolve `@/components` and `@/lib` imports in test files because Vite was not configured with the `@` path alias defined in `tsconfig.json`.
+   - _Detection_: `Error: Failed to resolve import "@/components/ExpenseList" from "src/__tests__/components.test.tsx"`.
+   - _Correction_: Configured `resolve.alias` in `frontend/vitest.config.ts` mapping `@` to `path.resolve(__dirname, "./src")` and installed `@vitejs/plugin-react` for JSX parsing.
+
+2. **React 19 Object Child Rendering Bug in Form Tests**:
+   - _Issue_: Component tests initially passed a legacy mock member structure (`[{id: 1, username: "alice"}]`) instead of the actual `string[]` (`["alice", "bob", "carol"]`) expected by `ExpenseForm`. In React 19, rendering raw objects throws `Objects are not valid as a React child`.
+   - _Detection_: `TypeError: Objects are not valid as a React child (found: object with keys {id, username})`.
+   - _Correction_: Aligned test fixtures with production TypeScript definitions where members are represented as `string[]` matching backend schemas.
+
+3. **BalancesCard Zero-Length Array Handling**:
+   - _Issue_: In `BalancesCard.tsx`, calling `.reduce()` directly on an empty `balances` array without an explicit fallback view caused tests with empty balances to fail.
+   - _Detection_: Vitest flagged assertion failure on empty state.
+   - _Correction_: Added an explicit empty-state card view when `balances.length === 0`, displaying `"No balance data available."`.
+
+4. **AlertBanner Property Name Discrepancy**:
+   - _Issue_: The `AlertBanner` component expected `type: "error" | "success" | "info"`, but test code passed `variant="error"`.
+   - _Detection_: Caught by `tsc --noEmit` (`Property 'variant' does not exist on type 'AlertBannerProps'`).
+   - _Correction_: Corrected property name in `components.test.tsx` to `type="error"`.
+
+5. **Prettier Code Formatting across New Frontend Source Files**:
+   - _Issue_: Generated React components contained formatting variations (line breaks and trailing commas) flagged by `npm run format:check`.
+   - _Detection_: `npx prettier --check` detected style inconsistencies in 9 frontend files.
+   - _Correction_: Executed `npx prettier --write "frontend/**/*.{ts,tsx,js,jsx,mjs,json,css}"` ensuring 100% adherence to project Prettier rules.
+
+---
+
+## 15. Verification Performed (Phase 4)
+
+- **Frontend Tests**: Executed `npm run test:frontend` (25 Vitest tests passing in 2 suites: `money.test.ts` and `components.test.tsx`).
+- **Backend Tests**: Executed `npm run test:backend` (25 pytest tests passing in 3 suites: `test_health.py`, `test_database_schema.py`, and `test_api_endpoints.py`).
+- **Full Monorepo Suite**: Executed `npm run test` (50 total automated tests passing).
+- **TypeScript Compilation**: `npm run typecheck` passed with 0 errors.
+- **Linters**: `npm run lint` (ESLint on frontend, Ruff on backend) passed with 0 errors and 0 warnings.
+- **Code Formatter**: `npm run format:check` passed with all files adhering to Prettier and Ruff rules.
+- **Production Build**: Executed `npm --prefix frontend run build` (`next build`), verifying static generation and compilation without warnings or errors.
+
+---
+
+## 16. Scope Boundary Confirmation
+
+- All 6 mandatory REST API endpoints and interactive UI workflows are fully implemented and verified.
+- In accordance with instructions, optional features (debt simplification, settlement suggestions, and repayment transactions) were **not** implemented.

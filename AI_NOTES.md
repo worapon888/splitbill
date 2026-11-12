@@ -147,5 +147,81 @@ During Phase 2, the following technical issues were identified and addressed:
 
 ## 9. Known Limitations (Phase 2)
 
-- REST API endpoints (`/groups`, `/expenses`, `/balances`) and business validation services (satang splitting, zero-sum checking, membership enforcement) are scheduled for **Phase 3**.
+- REST API endpoints (`/groups`, `/expenses`, `/balances`) and business validation services (satang splitting, zero-sum checking, membership enforcement) were scheduled for **Phase 3**.
 - Frontend UI components for group switching and expense entry are scheduled for **Phase 4**.
+
+---
+
+## 10. Scope of AI Assistance in Phase 3
+
+In **Phase 3 (Backend REST APIs, Business Logic & Tests)**, AI assistance was used for:
+
+1. **Pydantic v2 Request & Response Schemas**:
+   - `GroupResponse`, `GroupDetailResponse`, `ExpenseCreate`, `ExpenseSplit`, `ExpenseShareItem`, `ExpenseResponse`, and `BalanceResponse`.
+   - Implementing strict monetary string validation via regular expression (`^[0-9]+(\.[0-9]{1,2})?$`) and `Decimal` arithmetic, rejecting non-positive numbers and more than 2 decimal places.
+2. **Layered Architecture Implementation**:
+   - `app/api/deps.py`: `CurrentUser`, `GroupMemberGroup`, `IdempotencyKeyHeader`, and `DbSession` using modern `Annotated[..., Depends(...)]` dependency injection.
+   - `app/repositories/`: `GroupRepository` and `ExpenseRepository` for database query encapsulation and `selectinload` optimization.
+   - `app/services/`: `financial_service.py` (satang remainder distribution and split validation), `expense_service.py` (orchestrating expense creation, idempotency replay, payload conflict detection, and payer-only soft delete), and `balance_service.py` (zero-sum member balance computation).
+   - `app/api/`: `groups.py` and `expenses.py` routers with standard REST status codes and error handlers.
+3. **Automated Testing Suite (`pytest`)**:
+   - Authoring 14 comprehensive tests in `tests/test_api_endpoints.py` covering all mandatory scenarios from the brief (equal split satang distribution, exact split sum verification, 3-decimal rejection, repeated idempotency, multi-connection concurrency, group access denial, payer-only deletion, soft delete balance exclusion, zero-sum verification, invalid participants, negative/zero amounts, reverse chronological ordering, and payload conflict rejection).
+
+---
+
+## 11. Detection & Correction of Suboptimal / Unsafe AI Output (Phase 3)
+
+During Phase 3 implementation, the following real technical errors were detected and corrected:
+
+1. **Starlette TestClient Event Loop Deadlock in Multi-Threaded Concurrency Test**:
+   - _Issue_: In `test_concurrent_requests_using_same_key`, attempting to create and enter multiple `with TestClient(app)` instances inside worker threads of a `ThreadPoolExecutor` caused an event loop deadlock within Starlette/anyio portal thread initialization.
+   - _Detection_: Test execution hung indefinitely during `test_concurrent_requests_using_same_key`.
+   - _Correction_: Refactored the concurrency test to run `ExpenseService.create_expense` directly across 5 concurrent threads, each with its own independent SQLAlchemy `Session` bound to `test_engine`. This directly tested real multi-connection PostgreSQL transaction concurrency and unique constraint conflict handling without framework event-loop deadlocks.
+
+2. **Missing Monetary String Validation on Exact Split Shares in Pydantic Schema**:
+   - _Issue_: While the top-level `amount` field on `ExpenseCreate` used `validate_monetary_string`, the nested `shares` dictionary in `ExpenseSplit` initially did not validate that each individual share amount had at most 2 decimal places. This caused an invalid 3-decimal share (`"66.666"`) to bypass Pydantic validation and reach the database.
+   - _Detection_: `test_rejection_of_three_decimal_monetary_amounts` failed with `201 Created` instead of `422 Unprocessable Entity`.
+   - _Correction_: Added `validate_monetary_string(amt, allow_zero=False)` inside `ExpenseSplit.normalize_and_validate`, ensuring every share amount is validated and rejected with `422 Unprocessable Entity` before any database queries execute.
+
+3. **Ruff `B008` (Function Call in Argument Defaults)**:
+   - _Issue_: Initially declaring route parameters as `db: Session = Depends(get_db)` and `current_user: User = Depends(get_current_user)` triggered Ruff `B008` warnings across `app/api/deps.py`, `app/api/groups.py`, and `app/api/expenses.py`.
+   - _Detection_: Flagged by `uv run ruff check app`.
+   - _Correction_: Refactored all endpoint signatures and dependencies to use modern Python 3.9+ / FastAPI `Annotated` type aliases (`Annotated[Session, Depends(get_db)]`, `Annotated[User, Depends(get_current_user)]`), completely resolving all `B008` warnings while enhancing type readability.
+
+4. **Missing `HealthResponse` Export from `app/schemas`**:
+   - _Issue_: Phase 1 had a placeholder `app/schemas` package containing `HealthResponse`. When Phase 2 schemas were added, `HealthResponse` was omitted, causing `app/api/health.py` to fail import.
+   - _Detection_: Flagged by pytest collection failure.
+   - _Correction_: Created `app/schemas/health.py` and exported `HealthResponse` from `app/schemas/__init__.py`.
+
+5. **Cross-Test Pollution from Multi-Connection Concurrency Test**:
+   - _Issue_: The multi-threaded concurrency test committed records directly to PostgreSQL using `test_engine` sessions. Because `test_api_endpoints.py` ran before `test_database_schema.py`, the committed seed records remained in `splitbill_test`, causing `test_seed_data_correctness` to report 0 users created instead of 4.
+   - _Detection_: `test_database_schema.py::test_seed_data_correctness` failed when run as part of the full test suite, but passed in isolation.
+   - _Correction_: Added a `_truncate_tables(test_engine)` call in `conftest.py` at session startup and in `test_concurrent_requests_using_same_key` during teardown, guaranteeing a clean database baseline for all test suites.
+
+---
+
+## 12. Code Review & Verification Performed (Phase 3)
+
+- Executed all 25 automated pytest tests (`npm run test`) with zero failures:
+  - 1 smoke test (`test_health_endpoint_returns_ok`)
+  - 10 database schema & constraint tests (`test_database_schema.py`)
+  - 14 API endpoint, financial business logic, and concurrency tests (`test_api_endpoints.py`)
+- Verified live API workflows against the running PostgreSQL container (`splitbill` database):
+  - `GET /health` -> `200 OK` (`{"status": "ok", "service": "SplitBill API", "database": "connected"}`)
+  - `GET /groups` with `X-User: alice` -> `200 OK` (`[{"id": 1, "name": "Chiang Mai trip"}]`)
+  - `GET /groups/1` -> `200 OK` (`{"id": 1, "name": "Chiang Mai trip", "members": ["alice", "bob", "carol"]}`)
+  - `GET /groups/2` with `X-User: alice` -> `403 Forbidden` (`{"detail": "Not a member of this group"}`)
+  - `POST /groups/1/expenses` -> `201 Created` with exact satang distribution (`33.34`, `33.33`, `33.33`)
+  - `GET /groups/1/balances` -> `200 OK` (`alice: +66.66`, `bob: -33.33`, `carol: -33.33`, sum: `0.00`)
+  - `DELETE /groups/1/expenses/1` with `X-User: alice` -> `200 OK` (soft delete)
+  - `GET /groups/1/balances` after delete -> all returned to `0.00`
+- Executed quality suite:
+  - `npm run lint` -> all checks passed (Ruff + ESLint)
+  - `npm run format:check` -> all files match Prettier & Ruff style
+  - `npm run typecheck` -> TypeScript compiles with 0 errors
+
+---
+
+## 13. Known Limitations (Phase 3)
+
+- Frontend UI components for group switching, live split preview, and expense entry are scheduled for **Phase 4**.

@@ -345,9 +345,272 @@ cd backend && uv run pytest
 
 ---
 
+## REST API Reference
+
+All endpoints (except `/health`) require the `X-User` request header identifying the active participant (`alice`, `bob`, `carol`, or `dan`).
+
+### 1. List Groups
+
+- **Method**: `GET`
+- **Path**: `/groups`
+- **Headers**: `X-User: <username>`
+- **Description**: Returns all groups where the requesting user is an active member.
+- **Response**: `200 OK`
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Chiang Mai trip"
+  }
+]
+```
+
+### 2. Get Group Details
+
+- **Method**: `GET`
+- **Path**: `/groups/{group_id}`
+- **Headers**: `X-User: <username>`
+- **Description**: Returns group details and member username list.
+- **Access Control**:
+  - `403 Forbidden` with `{"detail": "Not a member of this group"}` if user does not belong to group.
+  - `404 Not Found` with `{"detail": "Group not found"}` if group ID does not exist.
+- **Response**: `200 OK`
+
+```json
+{
+  "id": 1,
+  "name": "Chiang Mai trip",
+  "members": ["alice", "bob", "carol"]
+}
+```
+
+### 3. Record an Expense
+
+- **Method**: `POST`
+- **Path**: `/groups/{group_id}/expenses`
+- **Headers**:
+  - `X-User: <username>` (Required)
+  - `Idempotency-Key: <key>` (Optional)
+- **Description**: Records a new shared expense with satang-accurate share allocation. Supports both `equal` and `exact` split specifications.
+- **Status Codes**:
+  - `201 Created`: Newly created expense.
+  - `200 OK`: Idempotent replay of an existing expense with matching payload.
+  - `400 Bad Request`: Invalid payer, invalid participant, or exact shares do not sum to total.
+  - `403 Forbidden`: Requesting user is not a member of the group.
+  - `409 Conflict`: Reused `Idempotency-Key` with a mutated request payload.
+  - `422 Unprocessable Entity`: Invalid monetary string format, $\le 0$, or $> 2$ decimal places.
+
+#### Example Request: Equal Split
+
+```json
+{
+  "description": "Chiang Mai Dinner",
+  "amount": "100.00",
+  "paid_by": "alice",
+  "split": {
+    "type": "equal",
+    "members": ["alice", "bob", "carol"]
+  }
+}
+```
+
+#### Example Response: Equal Split (`201 Created`)
+
+```json
+{
+  "id": 1,
+  "group_id": 1,
+  "paid_by": "alice",
+  "description": "Chiang Mai Dinner",
+  "amount": "100.00",
+  "created_at": "2026-11-12T08:16:52.753008Z",
+  "shares": [
+    {
+      "username": "alice",
+      "amount": "33.34"
+    },
+    {
+      "username": "bob",
+      "amount": "33.33"
+    },
+    {
+      "username": "carol",
+      "amount": "33.33"
+    }
+  ]
+}
+```
+
+#### Example Request: Exact Split
+
+```json
+{
+  "description": "Office Lunch Catering",
+  "amount": "1000.00",
+  "paid_by": "bob",
+  "split": {
+    "type": "exact",
+    "shares": {
+      "bob": "700.00",
+      "dan": "300.00"
+    }
+  }
+}
+```
+
+### 4. List Expenses
+
+- **Method**: `GET`
+- **Path**: `/groups/{group_id}/expenses`
+- **Headers**: `X-User: <username>`
+- **Description**: Returns all active expenses for the group in reverse chronological order (`created_at DESC, id DESC`). Soft-deleted expenses are excluded.
+- **Response**: `200 OK`
+
+```json
+[
+  {
+    "id": 2,
+    "group_id": 1,
+    "paid_by": "bob",
+    "description": "Taxi to Nimman",
+    "amount": "150.00",
+    "created_at": "2026-11-12T08:30:00.000000Z",
+    "shares": [
+      {
+        "username": "bob",
+        "amount": "75.00"
+      },
+      {
+        "username": "carol",
+        "amount": "75.00"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "group_id": 1,
+    "paid_by": "alice",
+    "description": "Chiang Mai Dinner",
+    "amount": "100.00",
+    "created_at": "2026-11-12T08:16:52.753008Z",
+    "shares": [
+      {
+        "username": "alice",
+        "amount": "33.34"
+      },
+      {
+        "username": "bob",
+        "amount": "33.33"
+      },
+      {
+        "username": "carol",
+        "amount": "33.33"
+      }
+    ]
+  }
+]
+```
+
+### 5. Soft-Delete an Expense
+
+- **Method**: `DELETE`
+- **Path**: `/groups/{group_id}/expenses/{expense_id}`
+- **Headers**: `X-User: <username>`
+- **Description**: Soft-deletes an expense. Restricted strictly to the original payer (`expense.paid_by`).
+- **Access Control & Status Codes**:
+  - `200 OK`: `{"message": "Expense deleted successfully", "id": 1}`
+  - `403 Forbidden`: `{"detail": "Only the payer can delete this expense"}` if caller is not the payer.
+  - `404 Not Found`: `{"detail": "Expense not found"}` if already deleted or does not exist.
+
+### 6. Get Group Balances
+
+- **Method**: `GET`
+- **Path**: `/groups/{group_id}/balances`
+- **Headers**: `X-User: <username>`
+- **Description**: Calculates the net balance of every member in the group.
+  $$\text{Balance} = \text{Total Paid} - \text{Total Share Owed}$$
+  - Positive balance (`+`): money owed to member.
+  - Negative balance (`-`): member owes money.
+  - All group members are included (even if balance is `0.00`).
+  - Soft-deleted expenses are excluded.
+  - The sum of member balances always sums to exactly `0.00`.
+- **Response**: `200 OK`
+
+```json
+[
+  {
+    "username": "alice",
+    "balance": "66.66"
+  },
+  {
+    "username": "bob",
+    "balance": "-33.33"
+  },
+  {
+    "username": "carol",
+    "balance": "-33.33"
+  }
+]
+```
+
+---
+
+## Financial Calculation & Business Logic
+
+### 1. Satang Remainder Distribution (Equal Split)
+
+Monetary calculations strictly avoid floating-point errors by performing integer satang arithmetic (`1 THB = 100 satang`):
+
+1. Convert total amount to integer satang: $T = \text{round}(\text{amount} \times 100)$.
+2. Calculate base satang per member: $B = T // N$.
+3. Calculate remainder satang: $R = T \% N$.
+4. Allocate $B + 1$ satang to the first $R$ members in the exact order specified in `split.members`, and $B$ satang to the remaining members.
+5. Convert back to 2-decimal string format (`f"{satang / 100:.2f}"`).
+
+**Example**: $100.00$ THB divided equally among `alice`, `bob`, `carol`:
+
+- $T = 10000$ satang, $N = 3$.
+- $B = 3333$ satang (`33.33`), $R = 1$ satang (`0.01`).
+- `alice` (index 0) gets $3334$ satang (`33.34`).
+- `bob` (index 1) gets $3333$ satang (`33.33`).
+- `carol` (index 2) gets $3333$ satang (`33.33`).
+- Total: $33.34 + 33.33 + 33.33 = 100.00$.
+
+### 2. Exact Split Validation
+
+- Every specified member share must be strictly $> 0.00$ and have $\le 2$ decimal places.
+- Sum of shares must equal the expense total exactly. Requests where $\sum \text{shares} \neq \text{amount}$ are rejected with `400 Bad Request` and detail `"The shares do not add up to the total"`.
+
+### 3. Zero-Sum Balance Guarantee
+
+For any group:
+$$\sum_{m \in \text{members}} \text{Balance}_m = \sum_{m \in \text{members}} \text{Total Paid}_m - \sum_{m \in \text{members}} \text{Total Owed}_m = \sum_{e \in \text{expenses}} \text{Amount}_e - \sum_{e \in \text{expenses}} \left( \sum_{s \in \text{shares}} \text{Amount}_s \right) = 0.00$$
+
+Every balance calculation verifies this invariant before returning.
+
+---
+
+## Idempotency & Transactional Concurrency Strategy
+
+Expense creation supports the optional `Idempotency-Key` header:
+
+1. **Scoped Uniqueness**: The database enforces composite unique constraint `uq_expenses_group_idempotency_key` on `(group_id, idempotency_key)`. Multiple null keys are permitted within the same group.
+2. **Concurrent Safety**:
+   - If concurrent requests arrive simultaneously with the same key, both attempt to insert.
+   - PostgreSQL allows exactly one insert to commit; the competing request encounters an `IntegrityError`.
+   - The service catches `IntegrityError`, immediately issues `session.rollback()`, queries the committed expense, verifies the request payload matches, and returns the original expense.
+3. **Payload Mismatch Detection**:
+   - Replaying the same key with an identical payload returns `200 OK` with the original expense.
+   - Reusing the same key with a different payload (different amount, description, payer, or split) is rejected with `409 Conflict` and detail `"Idempotency key reused with different request payload"`.
+4. **Missing Key**:
+   - Omitting `Idempotency-Key` creates the expense normally without idempotency caching.
+
+---
+
 ## Current Implementation Status
 
 - [x] **Phase 1**: Monorepo initialization, requirements analysis (`docs/implementation-plan.md`), PostgreSQL 16 Docker Compose setup, FastAPI skeleton with `/health`, SQLAlchemy 2.0 + Alembic wiring, Next.js TypeScript + Tailwind CSS initialization, and Husky + `lint-staged` + Ruff + ESLint + Prettier pre-commit automation.
 - [x] **Phase 2**: Database schema models (`users`, `groups`, `group_members`, `expenses`, `expense_shares`), Alembic migrations, idempotent seed data (`alice`, `bob`, `carol`, `dan`; Groups 1 & 2), and isolated test suite covering all 10 schema integrity areas.
-- [ ] **Phase 3**: Backend domain services, REST API endpoints, and mandatory `pytest` suite.
+- [x] **Phase 3**: All 6 REST API endpoints (`GET /groups`, `GET /groups/{id}`, `POST /groups/{id}/expenses`, `GET /groups/{id}/expenses`, `DELETE /groups/{id}/expenses/{id}`, `GET /groups/{id}/balances`), satang remainder allocation, zero-sum balances, ACID concurrent idempotency handling, payer-only soft deletion, and 25 comprehensive automated tests.
 - [ ] **Phase 4**: Next.js shared-expense interface, live satang split preview, and API integration.

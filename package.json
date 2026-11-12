@@ -15,6 +15,7 @@
     "format:check:backend": "uv run --project backend ruff format --check backend",
     "format:check:prettier": "prettier --check \"frontend/**/*.{ts,tsx,js,jsx,mjs,json,css}\" \"*.{json,yaml,yml,md}\" \"docs/**/*.md\"",
     "typecheck": "npm --prefix frontend run typecheck",
+    "seed": "uv run --directory backend python -m app.db.seed",
     "test": "uv run --project backend pytest backend/tests"
   },
   "devDependencies": {

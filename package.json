@@ -1,0 +1,46 @@
+{
+  "name": "splitbill-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SplitBill shared-expense full-stack monorepo",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "uv run --project backend ruff check backend",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "format": "npm run format:backend && npm run format:prettier",
+    "format:backend": "uv run --project backend ruff format backend",
+    "format:prettier": "prettier --write \"frontend/**/*.{ts,tsx,js,jsx,mjs,json,css}\" \"*.{json,yaml,yml,md}\" \"docs/**/*.md\"",
+    "format:check": "npm run format:check:backend && npm run format:check:prettier",
+    "format:check:backend": "uv run --project backend ruff format --check backend",
+    "format:check:prettier": "prettier --check \"frontend/**/*.{ts,tsx,js,jsx,mjs,json,css}\" \"*.{json,yaml,yml,md}\" \"docs/**/*.md\"",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "test": "uv run --project backend pytest backend/tests"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.0"
+  },
+  "lint-staged": {
+    "backend/**/*.py": [
+      "uv run --project backend ruff check --fix",
+      "uv run --project backend ruff format",
+      "uv run --project backend ruff check",
+      "uv run --project backend ruff format --check"
+    ],
+    "frontend/**/*.{ts,tsx,js,jsx,mjs}": [
+      "node frontend/node_modules/eslint/bin/eslint.js --config frontend/eslint.config.mjs --fix",
+      "prettier --write"
+    ],
+    "*.{json,yaml,yml,md}": [
+      "prettier --write"
+    ],
+    "docs/**/*.md": [
+      "prettier --write"
+    ],
+    "frontend/**/*.json": [
+      "prettier --write"
+    ]
+  }
+}

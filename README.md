@@ -698,5 +698,5 @@ cd frontend && npm test
 
 ## Development Time
 
-- Earlier audit documentation (`docs/final-audit-report.md`) referenced an unverified estimate of approximately 4.5 hours across phases. Because no verifiable time log is recorded in the repository, the actual duration cannot be confirmed from source artifacts alone.
-- **Actual development time**: To be confirmed by developer
+- Approximate development time: **approximately 4 hours** (developer-confirmed estimate, not a measured time log).
+- Note: an earlier audit draft cited ~4.5 hours; that figure was unverified and is superseded by the developer-confirmed value above.

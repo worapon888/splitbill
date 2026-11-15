@@ -1,5 +1,7 @@
 # SplitBill — Implementation Plan & Architecture
 
+> **Note**: This document is preserved as the historical Phase 1 planning baseline. Current implementation and verification status is tracked in [`docs/final-audit-report.md`](final-audit-report.md).
+
 ## 1. Requirements Analysis & Checklist
 
 ### Mandatory Requirements — Part 1: Backend (FastAPI + PostgreSQL 16)

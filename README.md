@@ -675,3 +675,28 @@ npm run test:frontend
 # Or directly in frontend folder
 cd frontend && npm test
 ```
+
+---
+
+## Known Limitations & Next Steps
+
+### Current Limitations
+
+- **Simplified Identity (`X-User` Header)**: Participant identity is passed via the `X-User` HTTP header and a UI user switcher (`alice`, `bob`, `carol`, `dan`), as required by the assessment scope. There is no password-based login, session management, JWT/OAuth2 authentication, or cryptographic identity verification.
+- **Local Development Setup Only**: The application is configured for local execution (`localhost:3000` frontend, `localhost:8000` backend, Docker Compose PostgreSQL 16 on `localhost:5432`) and has no confirmed public deployment or production container orchestration for the app servers.
+- **Optional Features Not Implemented**: Settlement suggestions (`GET /groups/{group_id}/settle-up`) and repayment recording (`POST /groups/{group_id}/payments`) are optional assessment extensions and are intentionally not implemented.
+- **Immutability & Soft Delete Only**: Recorded expenses cannot be edited after creation; only payer-initiated soft deletion is supported.
+
+### Proposed Next Steps (Production Hardening)
+
+- **Authentication & Authorization**: Replace `X-User` header trust with real authentication (e.g., JWT or OAuth2/OIDC) and derive the acting user from verified session/token claims.
+- **Deployment & Infrastructure**: Containerize the FastAPI and Next.js services, configure production environment/secrets management, and deploy to a managed cloud environment with TLS.
+- **Observability & Operations**: Add structured logging, health/readiness probes, error tracking, and rate limiting.
+- **Optional Feature Extensions**: Implement minimum-transfer settlement suggestions and repayment tracking if needed beyond the core assessment scope.
+
+---
+
+## Development Time
+
+- Earlier audit documentation (`docs/final-audit-report.md`) referenced an unverified estimate of approximately 4.5 hours across phases. Because no verifiable time log is recorded in the repository, the actual duration cannot be confirmed from source artifacts alone.
+- **Actual development time**: To be confirmed by developer

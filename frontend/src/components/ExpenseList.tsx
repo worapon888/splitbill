@@ -57,10 +57,10 @@ export function ExpenseList({
           />
         </svg>
         <p className="mt-2 text-sm font-medium text-slate-700">
-          No expenses recorded yet
+          ยังไม่มีรายการค่าใช้จ่าย
         </p>
         <p className="text-xs text-slate-400">
-          Use the form above to add the first expense for this group.
+          ใช้แบบฟอร์มเพื่อเพิ่มค่าใช้จ่ายรายการแรกของกลุ่มนี้
         </p>
       </div>
     );
@@ -71,14 +71,14 @@ export function ExpenseList({
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            Expense History
+            ประวัติค่าใช้จ่าย
           </h2>
           <p className="text-xs text-slate-500">
-            Reverse chronological order • Soft-deleted expenses are excluded
+            เรียงจากรายการล่าสุด • ไม่แสดงรายการที่ลบแล้ว
           </p>
         </div>
         <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-          {expenses.length} {expenses.length === 1 ? "expense" : "expenses"}
+          {expenses.length} รายการ
         </span>
       </div>
 
@@ -92,7 +92,7 @@ export function ExpenseList({
           let formattedDate = "";
           try {
             formattedDate = new Date(expense.created_at).toLocaleString(
-              "en-US",
+              "th-TH",
               {
                 month: "short",
                 day: "numeric",
@@ -122,13 +122,13 @@ export function ExpenseList({
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <span>
-                      Paid by{" "}
+                      จ่ายโดย{" "}
                       <span className="font-semibold capitalize text-slate-700">
                         {expense.paid_by}
                       </span>
                       {isPayer && (
                         <span className="ml-1 text-indigo-600 font-medium">
-                          (you)
+                          (คุณ)
                         </span>
                       )}
                     </span>
@@ -147,7 +147,7 @@ export function ExpenseList({
               {/* Share Breakdown */}
               <div className="rounded-md bg-slate-50 p-2.5 text-xs">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
-                  Allocated Shares
+                  สัดส่วนที่แบ่ง
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {expense.shares.map((share) => (
@@ -170,7 +170,7 @@ export function ExpenseList({
                   {isConfirming ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-rose-700 font-medium">
-                        Delete this expense?
+                        ต้องการลบรายการนี้หรือไม่?
                       </span>
                       <button
                         type="button"
@@ -178,7 +178,7 @@ export function ExpenseList({
                         onClick={() => handleConfirmDelete(expense.id)}
                         className="rounded-md bg-rose-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-700 transition"
                       >
-                        {isDeleting ? "Deleting..." : "Yes, Delete"}
+                        {isDeleting ? "กำลังลบ..." : "ยืนยันการลบ"}
                       </button>
                       <button
                         type="button"
@@ -186,7 +186,7 @@ export function ExpenseList({
                         onClick={() => setConfirmDeleteId(null)}
                         className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
                       >
-                        Cancel
+                        ยกเลิก
                       </button>
                     </div>
                   ) : (
@@ -194,7 +194,7 @@ export function ExpenseList({
                       type="button"
                       onClick={() => setConfirmDeleteId(expense.id)}
                       className="text-xs font-medium text-slate-400 hover:text-rose-600 transition flex items-center gap-1"
-                      title="Only the payer can delete this expense"
+                      title="เฉพาะผู้ชำระเงินเท่านั้นที่ลบรายการนี้ได้"
                     >
                       <svg
                         className="h-3.5 w-3.5"
@@ -209,7 +209,7 @@ export function ExpenseList({
                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                         />
                       </svg>
-                      <span>Delete</span>
+                      <span>ลบ</span>
                     </button>
                   )}
                 </div>

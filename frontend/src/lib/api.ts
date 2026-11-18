@@ -60,16 +60,16 @@ async function request<T>(
     });
   } catch (err: unknown) {
     const errorMsg =
-      err instanceof Error ? err.message : "Failed to connect to backend";
+      err instanceof Error ? err.message : "ไม่สามารถเชื่อมต่อระบบหลังบ้านได้";
     throw new ApiError(
       0,
-      `Network Error: Unable to reach SplitBill API at ${API_BASE_URL}. Ensure the backend is running. (${errorMsg})`,
-      errorMsg,
+      `ไม่สามารถเชื่อมต่อ SplitBill API ที่ ${API_BASE_URL} กรุณาตรวจสอบว่าระบบหลังบ้านกำลังทำงานอยู่ (${errorMsg})`,
+      `ไม่สามารถเชื่อมต่อระบบหลังบ้านได้ กรุณาตรวจสอบว่า FastAPI กำลังทำงานอยู่ที่ ${API_BASE_URL}`,
     );
   }
 
   if (!response.ok) {
-    let errorDetail = `Request failed with status ${response.status}`;
+    let errorDetail = `คำขอล้มเหลว (สถานะ ${response.status})`;
     try {
       const data = await response.json();
       if (typeof data.detail === "string") {
@@ -79,7 +79,7 @@ async function request<T>(
         errorDetail = data.detail
           .map(
             (item: { msg?: string; loc?: string[] }) =>
-              item.msg || "Invalid input",
+              item.msg || "ข้อมูลไม่ถูกต้อง",
           )
           .join("; ");
       }

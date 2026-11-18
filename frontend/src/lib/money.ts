@@ -159,7 +159,7 @@ export function validateExactSplit(
       assignedAmount,
       remainingAmount: "0.00",
       isValid: false,
-      errorMessage: "Please enter a valid positive total amount.",
+      errorMessage: "กรุณากรอกยอดรวมที่มากกว่า 0 ให้ถูกต้อง",
     };
   }
 
@@ -174,7 +174,7 @@ export function validateExactSplit(
       assignedAmount: "0.00",
       remainingAmount,
       isValid: false,
-      errorMessage: "Please select at least one member.",
+      errorMessage: "กรุณาเลือกสมาชิกอย่างน้อย 1 คน",
     };
   }
 
@@ -186,7 +186,7 @@ export function validateExactSplit(
       assignedAmount,
       remainingAmount,
       isValid: false,
-      errorMessage: "Every member share must be greater than zero.",
+      errorMessage: "ยอดของสมาชิกทุกคนต้องมากกว่า 0",
     };
   }
 
@@ -200,8 +200,8 @@ export function validateExactSplit(
       isValid: false,
       errorMessage:
         remainingSatang > 0
-          ? `Unallocated: ${remainingAmount} THB remaining.`
-          : `Over-allocated: Exceeds total by ${satangToString(Math.abs(remainingSatang))} THB.`,
+          ? `ยังแบ่งไม่ครบ: เหลืออีก ${remainingAmount} บาท`
+          : `แบ่งเกินยอดรวม ${satangToString(Math.abs(remainingSatang))} บาท`,
     };
   }
 

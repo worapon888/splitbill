@@ -147,10 +147,10 @@ export function ExpenseForm({
     >
       <div className="border-b border-slate-100 pb-3">
         <h2 className="text-base font-semibold text-slate-900">
-          Record New Expense
+          บันทึกค่าใช้จ่ายใหม่
         </h2>
         <p className="text-xs text-slate-500">
-          Split shared costs accurately down to the satang (0.01 THB)
+          แบ่งค่าใช้จ่ายร่วมกันอย่างแม่นยำถึงระดับสตางค์ (0.01 บาท)
         </p>
       </div>
 
@@ -161,13 +161,13 @@ export function ExpenseForm({
             htmlFor={`${formId}-desc`}
             className="text-xs font-semibold uppercase tracking-wider text-slate-600"
           >
-            Description *
+            รายละเอียด *
           </label>
           <input
             id={`${formId}-desc`}
             type="text"
             required
-            placeholder="e.g. Nimman Dinner, Grab Taxi, Office Coffee"
+            placeholder="เช่น มื้อเย็นที่นิมมาน, ค่าแท็กซี่, กาแฟที่ออฟฟิศ"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
@@ -180,7 +180,7 @@ export function ExpenseForm({
             htmlFor={`${formId}-amount`}
             className="text-xs font-semibold uppercase tracking-wider text-slate-600"
           >
-            Amount (THB) *
+            จำนวนเงิน (บาท) *
           </label>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm font-bold text-slate-400">
@@ -199,7 +199,7 @@ export function ExpenseForm({
           </div>
           {amount && !isAmountValid && (
             <span className="text-xs text-rose-600">
-              Enter a valid positive number with max 2 decimal places.
+              กรอกจำนวนเงินมากกว่า 0 และมีทศนิยมไม่เกิน 2 ตำแหน่ง
             </span>
           )}
         </div>
@@ -210,7 +210,7 @@ export function ExpenseForm({
             htmlFor={`${formId}-payer`}
             className="text-xs font-semibold uppercase tracking-wider text-slate-600"
           >
-            Paid By *
+            ผู้ชำระเงิน *
           </label>
           <select
             id={`${formId}-payer`}
@@ -220,7 +220,7 @@ export function ExpenseForm({
           >
             {members.map((member) => (
               <option key={member} value={member}>
-                {member} {member === currentUser ? "(you)" : ""}
+                {member} {member === currentUser ? "(คุณ)" : ""}
               </option>
             ))}
           </select>
@@ -230,7 +230,7 @@ export function ExpenseForm({
       {/* Split Type Selector */}
       <div className="flex flex-col gap-2">
         <label className="text-xs font-semibold uppercase tracking-wider text-slate-600">
-          Split Type
+          วิธีแบ่งค่าใช้จ่าย
         </label>
         <div className="flex rounded-lg border border-slate-200 p-1">
           <button
@@ -242,7 +242,7 @@ export function ExpenseForm({
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Equal Split
+            หารเท่ากัน
           </button>
           <button
             type="button"
@@ -253,7 +253,7 @@ export function ExpenseForm({
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Exact Amounts
+            ระบุจำนวนเงิน
           </button>
         </div>
       </div>
@@ -261,7 +261,7 @@ export function ExpenseForm({
       {/* Participants & Split Inputs */}
       <div className="flex flex-col gap-3">
         <label className="text-xs font-semibold uppercase tracking-wider text-slate-600">
-          Split Participants
+          ผู้ร่วมจ่าย
         </label>
 
         {splitType === "equal" ? (
@@ -337,7 +337,7 @@ export function ExpenseForm({
       <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3.5">
         <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
-            Live Split Preview
+            ตัวอย่างการแบ่งค่าใช้จ่าย
           </span>
           {splitType === "exact" && exactValidation && (
             <span
@@ -348,7 +348,7 @@ export function ExpenseForm({
               }`}
             >
               {exactValidation.isValid
-                ? "Balanced (0.00 THB)"
+                ? "ยอดตรงกัน (0.00 บาท)"
                 : exactValidation.errorMessage}
             </span>
           )}
@@ -379,13 +379,13 @@ export function ExpenseForm({
                   (s) => s.satang !== equalShares[0].satang,
                 ) && (
                   <p className="mt-1 text-xs text-slate-500 italic">
-                    Remaining satang distributed in member selection order.
+                    เศษสตางค์จะถูกแจกตามลำดับสมาชิกที่เลือก
                   </p>
                 )}
               </>
             ) : (
               <p className="text-xs text-slate-400 italic">
-                Enter an amount and select members to see calculated shares.
+                กรอกจำนวนเงินและเลือกสมาชิกเพื่อดูยอดที่แต่ละคนต้องจ่าย
               </p>
             )}
           </div>
@@ -395,19 +395,19 @@ export function ExpenseForm({
         {splitType === "exact" && exactValidation && (
           <div className="mt-2.5 grid grid-cols-3 gap-2 text-center text-xs">
             <div className="rounded-md bg-white p-2 border border-slate-200">
-              <span className="text-slate-500 block">Total</span>
+              <span className="text-slate-500 block">ยอดรวม</span>
               <span className="font-bold text-slate-900">
                 {amount ? formatThaiCurrency(amount, "฿") : "฿0.00"}
               </span>
             </div>
             <div className="rounded-md bg-white p-2 border border-slate-200">
-              <span className="text-slate-500 block">Assigned</span>
+              <span className="text-slate-500 block">แบ่งแล้ว</span>
               <span className="font-bold text-slate-900">
                 {formatThaiCurrency(exactValidation.assignedAmount, "฿")}
               </span>
             </div>
             <div className="rounded-md bg-white p-2 border border-slate-200">
-              <span className="text-slate-500 block">Remaining</span>
+              <span className="text-slate-500 block">คงเหลือ</span>
               <span
                 className={`font-bold ${
                   exactValidation.remainingSatang === 0
@@ -455,10 +455,10 @@ export function ExpenseForm({
                 d="M4 12a8 8 0 018-8v8H4z"
               ></path>
             </svg>
-            <span>Recording Expense...</span>
+            <span>กำลังบันทึก...</span>
           </>
         ) : (
-          <span>Record Expense</span>
+          <span>บันทึกค่าใช้จ่าย</span>
         )}
       </button>
     </form>

@@ -32,9 +32,9 @@ export function BalancesCard({
     return (
       <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
         <h2 className="text-base font-semibold text-slate-900">
-          Member Balances
+          ยอดคงเหลือของสมาชิก
         </h2>
-        <p className="text-sm text-slate-500">No balance data available.</p>
+        <p className="text-sm text-slate-500">ยังไม่มีข้อมูลยอดคงเหลือ</p>
       </div>
     );
   }
@@ -54,10 +54,10 @@ export function BalancesCard({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            Member Balances
+            ยอดคงเหลือของสมาชิก
           </h2>
           <p className="text-xs text-slate-500">
-            Net balance: (+) owed to member, (-) owed by member
+            ยอดสุทธิ: (+) สมาชิกต้องได้รับคืน, (-) สมาชิกต้องจ่าย
           </p>
         </div>
         <div
@@ -72,7 +72,7 @@ export function BalancesCard({
               isZeroSum ? "bg-emerald-500" : "bg-rose-500"
             }`}
           ></span>
-          <span>Zero-Sum Balances: 0.00 THB</span>
+          <span>ยอดรวมสมดุล: 0.00 บาท</span>
         </div>
       </div>
 
@@ -85,17 +85,17 @@ export function BalancesCard({
           const isZero = satang === 0;
 
           let badgeStyle = "bg-slate-50 border-slate-200 text-slate-700";
-          let statusText = "Settled up";
+          let statusText = "ชำระครบแล้ว";
           let amountColor = "text-slate-700";
 
           if (!isZero) {
             if (isNeg) {
               badgeStyle = "bg-rose-50 border-rose-200 text-rose-800";
-              statusText = "Owes money";
+              statusText = "ต้องจ่าย";
               amountColor = "text-rose-600 font-bold";
             } else {
               badgeStyle = "bg-emerald-50 border-emerald-200 text-emerald-800";
-              statusText = "Gets back";
+              statusText = "ต้องได้รับคืน";
               amountColor = "text-emerald-600 font-bold";
             }
           }
@@ -112,7 +112,7 @@ export function BalancesCard({
                   {item.username}{" "}
                   {isCurrentUser && (
                     <span className="text-xs font-normal text-indigo-600">
-                      (you)
+                      (คุณ)
                     </span>
                   )}
                 </span>

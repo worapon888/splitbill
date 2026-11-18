@@ -18,10 +18,11 @@ export function UserSelector({
     <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
       <div className="flex items-center justify-between">
         <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Simulated Active User (X-User Header)
+          ผู้ใช้งานปัจจุบันจำลอง (เฮดเดอร์ X-User)
         </label>
         <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
-          Acting as <span className="font-bold capitalize">{currentUser}</span>
+          กำลังใช้งานในชื่อ{" "}
+          <span className="font-bold capitalize">{currentUser}</span>
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

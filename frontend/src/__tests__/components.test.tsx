@@ -14,7 +14,7 @@ describe("UserSelector component", () => {
     const onSelect = vi.fn();
     render(<UserSelector currentUser="alice" onSelectUser={onSelect} />);
 
-    expect(screen.getByText(/Simulated Active User/i)).toBeDefined();
+    expect(screen.getByText(/ผู้ใช้งานปัจจุบันจำลอง/i)).toBeDefined();
     const bobBtn = screen.getByRole("button", { name: /bob/i });
     expect(bobBtn).toBeDefined();
 
@@ -46,7 +46,7 @@ describe("GroupSelector component", () => {
     );
 
     const officeLunchBtn = screen.getByRole("button", {
-      name: /Office lunch/i,
+      name: /มื้อกลางวันที่ออฟฟิศ/i,
     });
     expect(officeLunchBtn).toBeDefined();
 
@@ -65,7 +65,7 @@ describe("GroupSelector component", () => {
       />,
     );
 
-    expect(screen.getByText(/No groups found for this user/i)).toBeDefined();
+    expect(screen.getByText(/ไม่พบกลุ่มสำหรับผู้ใช้นี้/i)).toBeDefined();
   });
 });
 
@@ -85,17 +85,17 @@ describe("BalancesCard component", () => {
       />,
     );
 
-    expect(screen.getByText("Member Balances")).toBeDefined();
+    expect(screen.getByText("ยอดคงเหลือของสมาชิก")).toBeDefined();
     expect(screen.getByText("+฿66.66")).toBeDefined();
     expect(screen.getAllByText("-฿33.33").length).toBe(2);
-    expect(screen.getByText("Zero-Sum Balances: 0.00 THB")).toBeDefined();
+    expect(screen.getByText("ยอดรวมสมดุล: 0.00 บาท")).toBeDefined();
   });
 
   it("handles empty balance list cleanly", () => {
     render(
       <BalancesCard balances={[]} currentUser="alice" isLoading={false} />,
     );
-    expect(screen.getByText("No balance data available.")).toBeDefined();
+    expect(screen.getByText("ยังไม่มีข้อมูลยอดคงเหลือ")).toBeDefined();
   });
 });
 
@@ -127,7 +127,7 @@ describe("ExpenseList component", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Delete" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "ลบ" })).toBeDefined();
 
     // When bob views (non-payer)
     rerender(
@@ -139,7 +139,7 @@ describe("ExpenseList component", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "ลบ" })).toBeNull();
   });
 
   it("shows inline confirmation and invokes onDeleteExpense on confirmation", async () => {
@@ -153,10 +153,10 @@ describe("ExpenseList component", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-    expect(screen.getByText(/Delete this expense\?/i)).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "ลบ" }));
+    expect(screen.getByText(/ต้องการลบรายการนี้หรือไม่\?/i)).toBeDefined();
 
-    const confirmBtn = screen.getByRole("button", { name: "Yes, Delete" });
+    const confirmBtn = screen.getByRole("button", { name: "ยืนยันการลบ" });
     fireEvent.click(confirmBtn);
     expect(onDelete).toHaveBeenCalledWith(10);
   });
@@ -174,7 +174,7 @@ describe("AlertBanner component", () => {
     );
 
     expect(screen.getByText("Failed to connect to backend")).toBeDefined();
-    fireEvent.click(screen.getByRole("button", { name: "Dismiss alert" }));
+    fireEvent.click(screen.getByRole("button", { name: "ปิดการแจ้งเตือน" }));
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });
@@ -192,7 +192,7 @@ describe("ExpenseForm component", () => {
       />,
     );
 
-    const amountInput = screen.getByLabelText(/Amount \(THB\)/i);
+    const amountInput = screen.getByLabelText(/จำนวนเงิน \(บาท\)/i);
     fireEvent.change(amountInput, { target: { value: "100.00" } });
 
     await waitFor(() => {
@@ -213,18 +213,18 @@ describe("ExpenseForm component", () => {
       />,
     );
 
-    const amountInput = screen.getByLabelText(/Amount \(THB\)/i);
+    const amountInput = screen.getByLabelText(/จำนวนเงิน \(บาท\)/i);
     fireEvent.change(amountInput, { target: { value: "100.00" } });
 
     // Switch to exact split by clicking the button
-    fireEvent.click(screen.getByRole("button", { name: "Exact Amounts" }));
+    fireEvent.click(screen.getByRole("button", { name: "ระบุจำนวนเงิน" }));
 
-    // When shares are empty, warning says: "Every member share must be greater than zero."
-    expect(
-      screen.getByText("Every member share must be greater than zero."),
-    ).toBeDefined();
+    // เมื่อยังไม่กรอกยอดแบ่ง ระบบต้องแจ้งว่ายอดของสมาชิกต้องมากกว่า 0
+    expect(screen.getByText("ยอดของสมาชิกทุกคนต้องมากกว่า 0")).toBeDefined();
 
-    const submitBtn = screen.getByRole("button", { name: /Record Expense/i });
+    const submitBtn = screen.getByRole("button", {
+      name: /บันทึกค่าใช้จ่าย/i,
+    });
     expect(submitBtn.hasAttribute("disabled")).toBe(true);
   });
 });

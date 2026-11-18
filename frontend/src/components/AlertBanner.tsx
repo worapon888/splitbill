@@ -79,7 +79,7 @@ export function AlertBanner({ type, message, onDismiss }: AlertBannerProps) {
           type="button"
           onClick={onDismiss}
           className="ml-4 shrink-0 rounded-md p-1 opacity-70 transition hover:opacity-100 focus:outline-hidden"
-          aria-label="Dismiss alert"
+          aria-label="ปิดการแจ้งเตือน"
         >
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
             <path

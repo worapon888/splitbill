@@ -135,7 +135,7 @@ describe("money utilities - validateExactSplit", () => {
     expect(result.isValid).toBe(false);
     expect(result.assignedSatang).toBe(80000);
     expect(result.remainingSatang).toBe(20000); // 200.00 unallocated
-    expect(result.errorMessage).toContain("Unallocated: 200.00 THB remaining");
+    expect(result.errorMessage).toContain("ยังแบ่งไม่ครบ: เหลืออีก 200.00 บาท");
   });
 
   it("detects over-allocation (sum > total)", () => {
@@ -148,9 +148,7 @@ describe("money utilities - validateExactSplit", () => {
     expect(result.isValid).toBe(false);
     expect(result.assignedSatang).toBe(110000);
     expect(result.remainingSatang).toBe(-10000); // 100.00 over
-    expect(result.errorMessage).toContain(
-      "Over-allocated: Exceeds total by 100.00 THB",
-    );
+    expect(result.errorMessage).toContain("แบ่งเกินยอดรวม 100.00 บาท");
   });
 
   it("rejects non-positive share amounts", () => {
@@ -161,8 +159,6 @@ describe("money utilities - validateExactSplit", () => {
     const members = ["alice", "bob"];
     const result = validateExactSplit("100.00", shares, members);
     expect(result.isValid).toBe(false);
-    expect(result.errorMessage).toBe(
-      "Every member share must be greater than zero.",
-    );
+    expect(result.errorMessage).toBe("ยอดของสมาชิกทุกคนต้องมากกว่า 0");
   });
 });

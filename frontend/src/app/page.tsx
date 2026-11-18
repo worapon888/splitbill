@@ -8,6 +8,7 @@ import { ExpenseList } from "../components/ExpenseList";
 import { GroupSelector } from "../components/GroupSelector";
 import { UserSelector } from "../components/UserSelector";
 import { api, ApiError } from "../lib/api";
+import { getThaiApiError } from "../lib/thai";
 import {
   BalanceResponse,
   ExpenseCreate,
@@ -58,7 +59,9 @@ export default function SplitBillDashboard() {
       });
     } catch (err) {
       const msg =
-        err instanceof ApiError ? err.detail : "Failed to load groups";
+        err instanceof ApiError
+          ? getThaiApiError(err.detail)
+          : "โหลดรายการกลุ่มไม่สำเร็จ";
       setErrorMessage(msg);
       setGroups([]);
       setSelectedGroupId(null);
@@ -83,7 +86,9 @@ export default function SplitBillDashboard() {
         setBalances(balanceList);
       } catch (err) {
         const msg =
-          err instanceof ApiError ? err.detail : "Failed to load group data";
+          err instanceof ApiError
+            ? getThaiApiError(err.detail)
+            : "โหลดข้อมูลกลุ่มไม่สำเร็จ";
         setErrorMessage(msg);
         setGroupDetail(null);
         setExpenses([]);
@@ -140,9 +145,7 @@ export default function SplitBillDashboard() {
         payload,
         idempotencyKey,
       );
-      setSuccessMessage(
-        `Expense "${created.description}" recorded successfully!`,
-      );
+      setSuccessMessage(`บันทึกค่าใช้จ่าย "${created.description}" สำเร็จแล้ว`);
 
       // Refresh expenses and balances in parallel
       const [updatedExpenses, updatedBalances] = await Promise.all([
@@ -154,7 +157,9 @@ export default function SplitBillDashboard() {
       return true;
     } catch (err) {
       const msg =
-        err instanceof ApiError ? err.detail : "Failed to record expense";
+        err instanceof ApiError
+          ? getThaiApiError(err.detail)
+          : "บันทึกค่าใช้จ่ายไม่สำเร็จ";
       setErrorMessage(msg);
       return false;
     } finally {
@@ -170,7 +175,7 @@ export default function SplitBillDashboard() {
 
     try {
       await api.deleteExpense(currentUser, selectedGroupId, expenseId);
-      setSuccessMessage("Expense deleted successfully.");
+      setSuccessMessage("ลบรายการค่าใช้จ่ายสำเร็จแล้ว");
 
       // Refresh data
       const [updatedExpenses, updatedBalances] = await Promise.all([
@@ -182,7 +187,9 @@ export default function SplitBillDashboard() {
       return true;
     } catch (err) {
       const msg =
-        err instanceof ApiError ? err.detail : "Failed to delete expense";
+        err instanceof ApiError
+          ? getThaiApiError(err.detail)
+          : "ลบรายการค่าใช้จ่ายไม่สำเร็จ";
       setErrorMessage(msg);
       return false;
     }
@@ -198,7 +205,7 @@ export default function SplitBillDashboard() {
               SplitBill
             </h1>
             <p className="text-sm text-slate-500">
-              Shared Expense Manager accurate to the satang (0.01 THB)
+              จัดการค่าใช้จ่ายร่วมกัน แม่นยำถึงระดับสตางค์ (0.01 บาท)
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -226,7 +233,7 @@ export default function SplitBillDashboard() {
         )}
 
         {/* User Selector */}
-        <section aria-label="User Selection">
+        <section aria-label="เลือกผู้ใช้งาน">
           <UserSelector
             currentUser={currentUser}
             onSelectUser={handleUserChange}
@@ -234,7 +241,7 @@ export default function SplitBillDashboard() {
         </section>
 
         {/* Group Selector */}
-        <section aria-label="Group Selection">
+        <section aria-label="เลือกกลุ่ม">
           <GroupSelector
             groups={groups}
             selectedGroupId={selectedGroupId}
@@ -248,7 +255,7 @@ export default function SplitBillDashboard() {
         {selectedGroupId !== null && groupDetail ? (
           <div className="space-y-6">
             {/* Balances Summary */}
-            <section aria-label="Group Balances">
+            <section aria-label="ยอดคงเหลือของกลุ่ม">
               <BalancesCard
                 balances={balances}
                 currentUser={currentUser}
@@ -281,11 +288,10 @@ export default function SplitBillDashboard() {
           !isLoadingGroups && (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500">
               <p className="text-base font-semibold text-slate-700">
-                No Group Selected
+                ยังไม่ได้เลือกกลุ่ม
               </p>
               <p className="mt-1 text-sm text-slate-400">
-                Select a group above to view member balances and record shared
-                expenses.
+                เลือกกลุ่มด้านบนเพื่อดูยอดคงเหลือของสมาชิกและบันทึกค่าใช้จ่ายร่วมกัน
               </p>
             </div>
           )

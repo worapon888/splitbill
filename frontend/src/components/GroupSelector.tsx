@@ -12,6 +12,9 @@ interface GroupSelectorProps {
   onSelectGroup: (groupId: number) => void;
 }
 
+const CARD =
+  "h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-section-card";
+
 export function GroupSelector({
   groups,
   selectedGroupId,
@@ -21,75 +24,77 @@ export function GroupSelector({
 }: GroupSelectorProps) {
   if (isLoading) {
     return (
-      <div className="flex animate-pulse items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
-        <div className="h-5 w-24 rounded-sm bg-slate-200"></div>
-        <div className="h-9 w-48 rounded-lg bg-slate-200"></div>
+      <div className={`${CARD} flex animate-pulse flex-col gap-3`}>
+        <div className="h-5 w-40 rounded-sm bg-slate-200"></div>
+        <div className="h-14 rounded-xl bg-slate-100"></div>
       </div>
     );
   }
 
   if (groups.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
-        ไม่พบกลุ่มสำหรับผู้ใช้นี้ ลองเปลี่ยนเป็นผู้ใช้อื่น เช่น Alice หรือ Bob
+      <div className={`${CARD} flex flex-col gap-2`}>
+        <h2 className="text-base font-semibold text-slate-900">
+          เลือกกลุ่มค่าใช้จ่าย
+        </h2>
+        <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+          ไม่พบกลุ่มสำหรับผู้ใช้นี้ ลองเลือกชื่ออื่นทางด้านซ้าย
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <label
-          htmlFor="group-select"
-          className="text-xs font-semibold uppercase tracking-wider text-slate-500"
-        >
-          เลือกกลุ่มที่เข้าถึงได้
-        </label>
-        {groupDetail && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-600">
-            <span className="font-medium text-slate-700">สมาชิก:</span>
-            <div className="flex flex-wrap gap-1">
-              {groupDetail.members.map((m) => (
-                <span
-                  key={m}
-                  className="rounded-full bg-slate-100 px-2 py-0.5 font-medium capitalize text-slate-700"
-                >
-                  {m}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+    <div className={`${CARD} flex flex-col gap-3`}>
+      <div>
+        <h2 className="text-base font-semibold text-slate-900">
+          เลือกกลุ่มค่าใช้จ่าย
+        </h2>
+        <p className="text-xs text-slate-500">แสดงเฉพาะกลุ่มที่คุณเป็นสมาชิก</p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2">
         {groups.map((group) => {
           const isSelected = group.id === selectedGroupId;
+          const members =
+            isSelected && groupDetail && groupDetail.id === group.id
+              ? groupDetail.members
+              : null;
           return (
             <button
               key={group.id}
               type="button"
+              aria-pressed={isSelected}
               onClick={() => onSelectGroup(group.id)}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+              className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition focus:outline-hidden focus:ring-2 focus:ring-primary/30 ${
                 isSelected
-                  ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  ? "border-primary bg-primary-light ring-1 ring-primary"
+                  : "border-slate-200 bg-white hover:border-primary-border hover:bg-slate-50"
               }`}
             >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <span
+                aria-hidden="true"
+                className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                  isSelected
+                    ? "bg-primary-gradient border-primary"
+                    : "border-slate-300 bg-white"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              <span>{getThaiGroupName(group.name)}</span>
+                {isSelected && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+                )}
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="text-sm font-semibold text-slate-900">
+                  {getThaiGroupName(group.name)}
+                </span>
+                {members && (
+                  <span className="text-xs text-slate-600">
+                    สมาชิก:{" "}
+                    <span className="capitalize">{members.join(", ")}</span>
+                  </span>
+                )}
+              </span>
             </button>
           );
         })}

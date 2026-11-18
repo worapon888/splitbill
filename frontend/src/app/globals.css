@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary-dark: #4C1D95;
+  --color-primary: #7C3AED;
+  --color-primary-hover: #6D28D9;
+  --color-primary-light: #F5F3FF;
+  --color-primary-border: #DDD6FE;
+  --color-primary-accent: #9333EA;
+
+  --shadow-section-card:
+    0 2px 6px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-primary-card: 0 6px 18px rgba(124, 58, 237, 0.18);
+}
+
+.bg-primary-gradient {
+  background: linear-gradient(
+    120deg,
+    var(--color-primary-dark) 0%,
+    var(--color-primary-hover) 52%,
+    var(--color-primary-accent) 100%
+  );
+}
+
+.bg-primary-gradient:hover {
+  background: linear-gradient(
+    120deg,
+    #3B0764 0%,
+    var(--color-primary-dark) 52%,
+    var(--color-primary) 100%
+  );
+}

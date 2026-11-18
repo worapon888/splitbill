@@ -14,7 +14,7 @@ describe("UserSelector component", () => {
     const onSelect = vi.fn();
     render(<UserSelector currentUser="alice" onSelectUser={onSelect} />);
 
-    expect(screen.getByText(/ผู้ใช้งานปัจจุบันจำลอง/i)).toBeDefined();
+    expect(screen.getByText(/คุณกำลังใช้งานในชื่อใคร/i)).toBeDefined();
     const bobBtn = screen.getByRole("button", { name: /bob/i });
     expect(bobBtn).toBeDefined();
 
@@ -70,7 +70,7 @@ describe("GroupSelector component", () => {
 });
 
 describe("BalancesCard component", () => {
-  it("displays balances and confirms zero-sum invariant", () => {
+  it("displays valid zero-sum balances without redundant badge or error alert", () => {
     const balances: BalanceResponse[] = [
       { username: "alice", balance: "66.66" },
       { username: "bob", balance: "-33.33" },
@@ -85,10 +85,34 @@ describe("BalancesCard component", () => {
       />,
     );
 
-    expect(screen.getByText("ยอดคงเหลือของสมาชิก")).toBeDefined();
-    expect(screen.getByText("+฿66.66")).toBeDefined();
-    expect(screen.getAllByText("-฿33.33").length).toBe(2);
-    expect(screen.getByText("ยอดรวมสมดุล: 0.00 บาท")).toBeDefined();
+    expect(screen.getByText("สรุปยอดของกลุ่ม")).toBeDefined();
+    expect(screen.getByText("+66.66 บาท")).toBeDefined();
+    expect(screen.getAllByText("-33.33 บาท").length).toBe(2);
+    expect(screen.queryByText(/ยอดรวมสมดุล/i)).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("displays a clear Thai error message when balances do not sum to zero", () => {
+    const invalidBalances: BalanceResponse[] = [
+      { username: "alice", balance: "66.66" },
+      { username: "bob", balance: "-30.00" },
+      { username: "carol", balance: "-33.33" },
+    ];
+
+    render(
+      <BalancesCard
+        balances={invalidBalances}
+        currentUser="alice"
+        isLoading={false}
+      />,
+    );
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toBeDefined();
+    expect(alert.textContent).toContain(
+      "พบความคลาดเคลื่อนของข้อมูล: ยอดรวมคงเหลือของสมาชิกไม่สมดุล",
+    );
+    expect(alert.textContent).toContain("3.33 บาท");
   });
 
   it("handles empty balance list cleanly", () => {
@@ -96,6 +120,53 @@ describe("BalancesCard component", () => {
       <BalancesCard balances={[]} currentUser="alice" isLoading={false} />,
     );
     expect(screen.getByText("ยังไม่มีข้อมูลยอดคงเหลือ")).toBeDefined();
+  });
+
+  it("prioritizes the current user at the top and highlights their card without mutating input", () => {
+    const balances: BalanceResponse[] = [
+      { username: "alice", balance: "66.66" },
+      { username: "bob", balance: "-33.33" },
+      { username: "carol", balance: "-33.33" },
+    ];
+    const originalOrder = balances.map((b) => b.username);
+
+    const { rerender } = render(
+      <BalancesCard balances={balances} currentUser="bob" isLoading={false} />,
+    );
+
+    let items = screen.getAllByRole("listitem");
+    expect(items[0].textContent).toContain("bob");
+    expect(items[0].textContent).toContain("(คุณ)");
+    expect(items[0].className).toContain("bg-primary-gradient");
+    expect(items[0].className).toContain("border-primary");
+    expect(items[0].className).toContain("shadow-primary-card");
+    expect(items[1].textContent).toContain("alice");
+    expect(items[1].className).toContain("bg-white");
+    expect(items[2].textContent).toContain("carol");
+    expect(items[2].className).toContain("bg-white");
+
+    // Switching user to alice updates order immediately
+    rerender(
+      <BalancesCard
+        balances={balances}
+        currentUser="alice"
+        isLoading={false}
+      />,
+    );
+
+    items = screen.getAllByRole("listitem");
+    expect(items[0].textContent).toContain("alice");
+    expect(items[0].textContent).toContain("(คุณ)");
+    expect(items[0].className).toContain("bg-primary-gradient");
+    expect(items[0].className).toContain("border-primary");
+    expect(items[0].className).toContain("shadow-primary-card");
+    expect(items[1].textContent).toContain("bob");
+    expect(items[1].className).toContain("bg-white");
+    expect(items[2].textContent).toContain("carol");
+    expect(items[2].className).toContain("bg-white");
+
+    // Original array is untouched
+    expect(balances.map((b) => b.username)).toEqual(originalOrder);
   });
 });
 
@@ -197,9 +268,9 @@ describe("ExpenseForm component", () => {
 
     await waitFor(() => {
       // With all 3 members selected by default:
-      // alice gets ฿33.34, bob gets ฿33.33, carol gets ฿33.33
-      expect(screen.getByText("฿33.34")).toBeDefined();
-      expect(screen.getAllByText("฿33.33").length).toBe(2);
+      // alice gets 33.34 บาท, bob gets 33.33 บาท, carol gets 33.33 บาท
+      expect(screen.getByText("33.34 บาท")).toBeDefined();
+      expect(screen.getAllByText("33.33 บาท").length).toBe(2);
     });
   });
 
@@ -217,7 +288,7 @@ describe("ExpenseForm component", () => {
     fireEvent.change(amountInput, { target: { value: "100.00" } });
 
     // Switch to exact split by clicking the button
-    fireEvent.click(screen.getByRole("button", { name: "ระบุจำนวนเงิน" }));
+    fireEvent.click(screen.getByRole("button", { name: "กำหนดเอง" }));
 
     // เมื่อยังไม่กรอกยอดแบ่ง ระบบต้องแจ้งว่ายอดของสมาชิกต้องมากกว่า 0
     expect(screen.getByText("ยอดของสมาชิกทุกคนต้องมากกว่า 0")).toBeDefined();

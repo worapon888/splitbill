@@ -48,12 +48,14 @@ describe("money utilities - satangToString and formatThaiCurrency", () => {
     expect(satangToString(-1234)).toBe("-12.34");
   });
 
-  it("formats Thai currency display with thousands separators and optional prefix", () => {
-    expect(formatThaiCurrency("1000.00")).toBe("1,000.00");
-    expect(formatThaiCurrency("1000.00", "฿")).toBe("฿1,000.00");
-    expect(formatThaiCurrency("0.00", "฿")).toBe("฿0.00");
-    expect(formatThaiCurrency("-500.50", "฿")).toBe("-฿500.50");
-    expect(formatThaiCurrency("1234567.89", "฿")).toBe("฿1,234,567.89");
+  it("formats Thai currency display with thousands separators and ' บาท' suffix", () => {
+    expect(formatThaiCurrency("0.00")).toBe("0.00 บาท");
+    expect(formatThaiCurrency("0.01")).toBe("0.01 บาท");
+    expect(formatThaiCurrency("133.00")).toBe("133.00 บาท");
+    expect(formatThaiCurrency("1000.00")).toBe("1,000.00 บาท");
+    expect(formatThaiCurrency("-500.50")).toBe("-500.50 บาท");
+    expect(formatThaiCurrency("1234567.89")).toBe("1,234,567.89 บาท");
+    expect(formatThaiCurrency("1000.00", "")).toBe("1,000.00");
   });
 });
 

@@ -32,7 +32,7 @@ export function ExpenseList({
 
   if (isLoading) {
     return (
-      <div className="flex animate-pulse flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5">
+      <div className="flex animate-pulse flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-section-card">
         <div className="h-5 w-40 rounded-sm bg-slate-200"></div>
         <div className="h-20 rounded-lg bg-slate-100"></div>
         <div className="h-20 rounded-lg bg-slate-100"></div>
@@ -42,9 +42,9 @@ export function ExpenseList({
 
   if (expenses.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-8 py-10 text-center text-slate-500 shadow-section-card">
         <svg
-          className="h-10 w-10 text-slate-300"
+          className="h-9 w-9 text-slate-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -56,26 +56,24 @@ export function ExpenseList({
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
           />
         </svg>
-        <p className="mt-2 text-sm font-medium text-slate-700">
+        <p className="mt-3 text-sm font-semibold text-slate-800">
           ยังไม่มีรายการค่าใช้จ่าย
         </p>
         <p className="text-xs text-slate-400">
-          ใช้แบบฟอร์มเพื่อเพิ่มค่าใช้จ่ายรายการแรกของกลุ่มนี้
+          เพิ่มรายการแรกของกลุ่มนี้ได้จากฟอร์มเพิ่มค่าใช้จ่าย
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+    <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-section-card">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            ประวัติค่าใช้จ่าย
+            รายการค่าใช้จ่าย
           </h2>
-          <p className="text-xs text-slate-500">
-            เรียงจากรายการล่าสุด • ไม่แสดงรายการที่ลบแล้ว
-          </p>
+          <p className="text-xs text-slate-500">เรียงจากรายการล่าสุด</p>
         </div>
         <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
           {expenses.length} รายการ
@@ -122,12 +120,12 @@ export function ExpenseList({
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <span>
-                      จ่ายโดย{" "}
+                      ออกเงินโดย{" "}
                       <span className="font-semibold capitalize text-slate-700">
                         {expense.paid_by}
                       </span>
                       {isPayer && (
-                        <span className="ml-1 text-indigo-600 font-medium">
+                        <span className="ml-1 text-primary font-medium">
                           (คุณ)
                         </span>
                       )}
@@ -139,15 +137,15 @@ export function ExpenseList({
 
                 <div className="text-right">
                   <span className="text-base font-bold text-slate-900">
-                    {formatThaiCurrency(expense.amount, "฿")}
+                    {formatThaiCurrency(expense.amount)}
                   </span>
                 </div>
               </div>
 
               {/* Share Breakdown */}
               <div className="rounded-md bg-slate-50 p-2.5 text-xs">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
-                  สัดส่วนที่แบ่ง
+                <span className="text-[11px] font-semibold text-slate-500 block mb-1.5">
+                  ส่วนแบ่งค่าใช้จ่ายของแต่ละคน
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {expense.shares.map((share) => (
@@ -156,8 +154,8 @@ export function ExpenseList({
                       className="inline-flex items-center gap-1.5 rounded-md bg-white px-2 py-1 border border-slate-200 text-slate-700 font-medium"
                     >
                       <span className="capitalize">{share.username}:</span>
-                      <span className="font-mono text-indigo-700 font-bold">
-                        {formatThaiCurrency(share.amount, "฿")}
+                      <span className="font-mono text-primary font-bold">
+                        {formatThaiCurrency(share.amount)}
                       </span>
                     </span>
                   ))}
@@ -194,7 +192,7 @@ export function ExpenseList({
                       type="button"
                       onClick={() => setConfirmDeleteId(expense.id)}
                       className="text-xs font-medium text-slate-400 hover:text-rose-600 transition flex items-center gap-1"
-                      title="เฉพาะผู้ชำระเงินเท่านั้นที่ลบรายการนี้ได้"
+                      title="เฉพาะคนที่ออกเงินเท่านั้นที่ลบรายการนี้ได้"
                     >
                       <svg
                         className="h-3.5 w-3.5"

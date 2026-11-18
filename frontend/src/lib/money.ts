@@ -50,11 +50,12 @@ export function satangToString(satang: number): string {
 }
 
 /**
- * Format monetary string or satang into Thai formatted currency with comma grouping (e.g. "1,000.00").
+ * Format monetary string or satang into Thai formatted currency with comma grouping
+ * and optional suffix (defaults to " บาท").
  */
 export function formatThaiCurrency(
   value: string | number,
-  prefix = "",
+  suffix = " บาท",
 ): string {
   let satang: number | null;
   if (typeof value === "number") {
@@ -78,7 +79,11 @@ export function formatThaiCurrency(
   const formatted = `${bahtFormatted}.${rem.toString().padStart(2, "0")}`;
   const sign = isNegative ? "-" : "";
 
-  return `${sign}${prefix}${formatted}`;
+  if (suffix === "฿") {
+    return `${sign}${formatted} บาท`;
+  }
+
+  return `${sign}${formatted}${suffix}`;
 }
 
 export interface EqualSplitShare {
@@ -200,8 +205,8 @@ export function validateExactSplit(
       isValid: false,
       errorMessage:
         remainingSatang > 0
-          ? `ยังแบ่งไม่ครบ: เหลืออีก ${remainingAmount} บาท`
-          : `แบ่งเกินยอดรวม ${satangToString(Math.abs(remainingSatang))} บาท`,
+          ? `ยังแบ่งไม่ครบ: เหลืออีก ${formatThaiCurrency(remainingSatang)}`
+          : `แบ่งเกินยอดรวม ${formatThaiCurrency(Math.abs(remainingSatang))}`,
     };
   }
 

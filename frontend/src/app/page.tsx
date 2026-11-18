@@ -61,7 +61,7 @@ export default function SplitBillDashboard() {
       const msg =
         err instanceof ApiError
           ? getThaiApiError(err.detail)
-          : "โหลดรายการกลุ่มไม่สำเร็จ";
+          : "โหลดรายการกลุ่มไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
       setErrorMessage(msg);
       setGroups([]);
       setSelectedGroupId(null);
@@ -88,7 +88,7 @@ export default function SplitBillDashboard() {
         const msg =
           err instanceof ApiError
             ? getThaiApiError(err.detail)
-            : "โหลดข้อมูลกลุ่มไม่สำเร็จ";
+            : "โหลดข้อมูลกลุ่มไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
         setErrorMessage(msg);
         setGroupDetail(null);
         setExpenses([]);
@@ -145,7 +145,9 @@ export default function SplitBillDashboard() {
         payload,
         idempotencyKey,
       );
-      setSuccessMessage(`บันทึกค่าใช้จ่าย "${created.description}" สำเร็จแล้ว`);
+      setSuccessMessage(
+        `บันทึก "${created.description}" แล้ว สรุปยอดของกลุ่มอัปเดตเรียบร้อย`,
+      );
 
       // Refresh expenses and balances in parallel
       const [updatedExpenses, updatedBalances] = await Promise.all([
@@ -159,7 +161,7 @@ export default function SplitBillDashboard() {
       const msg =
         err instanceof ApiError
           ? getThaiApiError(err.detail)
-          : "บันทึกค่าใช้จ่ายไม่สำเร็จ";
+          : "บันทึกค่าใช้จ่ายไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
       setErrorMessage(msg);
       return false;
     } finally {
@@ -175,7 +177,7 @@ export default function SplitBillDashboard() {
 
     try {
       await api.deleteExpense(currentUser, selectedGroupId, expenseId);
-      setSuccessMessage("ลบรายการค่าใช้จ่ายสำเร็จแล้ว");
+      setSuccessMessage("ลบรายการแล้ว สรุปยอดของกลุ่มอัปเดตเรียบร้อย");
 
       // Refresh data
       const [updatedExpenses, updatedBalances] = await Promise.all([
@@ -189,7 +191,7 @@ export default function SplitBillDashboard() {
       const msg =
         err instanceof ApiError
           ? getThaiApiError(err.detail)
-          : "ลบรายการค่าใช้จ่ายไม่สำเร็จ";
+          : "ลบรายการค่าใช้จ่ายไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
       setErrorMessage(msg);
       return false;
     }
@@ -197,7 +199,7 @@ export default function SplitBillDashboard() {
 
   return (
     <main className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         {/* Header */}
         <header className="flex flex-col gap-1 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -205,14 +207,8 @@ export default function SplitBillDashboard() {
               SplitBill
             </h1>
             <p className="text-sm text-slate-500">
-              จัดการค่าใช้จ่ายร่วมกัน แม่นยำถึงระดับสตางค์ (0.01 บาท)
+              แชร์ค่าใช้จ่ายกับเพื่อน หารเงินง่าย ๆ
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-              FastAPI + Next.js
-            </span>
           </div>
         </header>
 
@@ -232,66 +228,65 @@ export default function SplitBillDashboard() {
           />
         )}
 
-        {/* User Selector */}
-        <section aria-label="เลือกผู้ใช้งาน">
-          <UserSelector
-            currentUser={currentUser}
-            onSelectUser={handleUserChange}
-          />
-        </section>
+        {/* Section 1: User and Group Selection */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <section aria-label="เลือกผู้ใช้งาน">
+            <UserSelector
+              currentUser={currentUser}
+              onSelectUser={handleUserChange}
+            />
+          </section>
 
-        {/* Group Selector */}
-        <section aria-label="เลือกกลุ่ม">
-          <GroupSelector
-            groups={groups}
-            selectedGroupId={selectedGroupId}
-            groupDetail={groupDetail}
-            isLoading={isLoadingGroups}
-            onSelectGroup={handleGroupSelect}
-          />
-        </section>
+          <section aria-label="เลือกกลุ่มค่าใช้จ่าย">
+            <GroupSelector
+              groups={groups}
+              selectedGroupId={selectedGroupId}
+              groupDetail={groupDetail}
+              isLoading={isLoadingGroups}
+              onSelectGroup={handleGroupSelect}
+            />
+          </section>
+        </div>
 
-        {/* Group Content */}
+        {/* Section 2: Main Content */}
         {selectedGroupId !== null && groupDetail ? (
-          <div className="space-y-6">
-            {/* Balances Summary */}
-            <section aria-label="ยอดคงเหลือของกลุ่ม">
-              <BalancesCard
-                balances={balances}
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+            <section aria-label="เพิ่มค่าใช้จ่าย">
+              <ExpenseForm
+                members={groupDetail.members}
                 currentUser={currentUser}
-                isLoading={isLoadingGroupData}
+                isSubmitting={isSubmitting}
+                onSubmit={handleCreateExpense}
               />
             </section>
 
-            {/* Split Entry Form and Expense List Grid */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-              <div className="lg:col-span-5">
-                <ExpenseForm
-                  members={groupDetail.members}
+            <div className="flex flex-col gap-6">
+              <section aria-label="สรุปยอดของกลุ่ม">
+                <BalancesCard
+                  balances={balances}
                   currentUser={currentUser}
-                  isSubmitting={isSubmitting}
-                  onSubmit={handleCreateExpense}
+                  isLoading={isLoadingGroupData}
                 />
-              </div>
+              </section>
 
-              <div className="lg:col-span-7">
+              <section aria-label="รายการค่าใช้จ่าย">
                 <ExpenseList
                   expenses={expenses}
                   currentUser={currentUser}
                   isLoading={isLoadingGroupData}
                   onDeleteExpense={handleDeleteExpense}
                 />
-              </div>
+              </section>
             </div>
           </div>
         ) : (
           !isLoadingGroups && (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500">
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500">
               <p className="text-base font-semibold text-slate-700">
                 ยังไม่ได้เลือกกลุ่ม
               </p>
               <p className="mt-1 text-sm text-slate-400">
-                เลือกกลุ่มด้านบนเพื่อดูยอดคงเหลือของสมาชิกและบันทึกค่าใช้จ่ายร่วมกัน
+                เลือกกลุ่มค่าใช้จ่ายด้านบนเพื่อดูสรุปยอดและเพิ่มค่าใช้จ่าย
               </p>
             </div>
           )

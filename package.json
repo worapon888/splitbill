@@ -5,32 +5,42 @@
   "description": "SplitBill shared-expense full-stack monorepo",
   "scripts": {
     "prepare": "husky",
+    "dev": "concurrently --kill-others-on-fail --names backend,frontend --prefix-colors blue,magenta \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "cross-env DEBUG=true node scripts/run-uv.mjs run --directory backend uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:status": "docker compose ps",
+    "db:migrate": "cross-env DEBUG=true node scripts/run-uv.mjs run --directory backend alembic upgrade head",
+    "setup": "npm install && npm --prefix frontend install && node scripts/run-uv.mjs sync --directory backend --python 3.12 && npm run db:up && npm run db:migrate && npm run seed",
     "lint": "npm run lint:backend && npm run lint:frontend",
-    "lint:backend": "uv run --project backend ruff check backend",
+    "lint:backend": "node scripts/run-uv.mjs run --project backend ruff check backend",
     "lint:frontend": "npm --prefix frontend run lint",
     "format": "npm run format:backend && npm run format:prettier",
-    "format:backend": "uv run --project backend ruff format backend",
+    "format:backend": "node scripts/run-uv.mjs run --project backend ruff format backend",
     "format:prettier": "prettier --write \"frontend/**/*.{ts,tsx,js,jsx,mjs,json,css}\" \"*.{json,yaml,yml,md}\" \"docs/**/*.md\"",
     "format:check": "npm run format:check:backend && npm run format:check:prettier",
-    "format:check:backend": "uv run --project backend ruff format --check backend",
+    "format:check:backend": "node scripts/run-uv.mjs run --project backend ruff format --check backend",
     "format:check:prettier": "prettier --check \"frontend/**/*.{ts,tsx,js,jsx,mjs,json,css}\" \"*.{json,yaml,yml,md}\" \"docs/**/*.md\"",
     "typecheck": "npm --prefix frontend run typecheck",
-    "seed": "uv run --directory backend python -m app.db.seed",
-    "test:backend": "uv run --project backend pytest backend/tests",
+    "seed": "cross-env DEBUG=true node scripts/run-uv.mjs run --directory backend python -m app.db.seed",
+    "test:backend": "cross-env DEBUG=true node scripts/run-uv.mjs run --project backend pytest backend/tests",
     "test:frontend": "npm --prefix frontend test",
     "test": "npm run test:backend && npm run test:frontend"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
     "prettier": "^3.5.0"
   },
   "lint-staged": {
     "backend/**/*.py": [
-      "uv run --project backend ruff check --fix",
-      "uv run --project backend ruff format",
-      "uv run --project backend ruff check",
-      "uv run --project backend ruff format --check"
+      "node scripts/run-uv.mjs run --project backend ruff check --fix",
+      "node scripts/run-uv.mjs run --project backend ruff format",
+      "node scripts/run-uv.mjs run --project backend ruff check",
+      "node scripts/run-uv.mjs run --project backend ruff format --check"
     ],
     "frontend/**/*.{ts,tsx,js,jsx,mjs}": [
       "node frontend/node_modules/eslint/bin/eslint.js --config frontend/eslint.config.mjs --fix",

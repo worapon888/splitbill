@@ -64,6 +64,45 @@ splitbill/
 
 ---
 
+## Quick Start
+
+For the first run, install all dependencies, start PostgreSQL, apply migrations,
+and seed the development data from the repository root:
+
+```bash
+npm run setup
+```
+
+Then start the FastAPI backend and Next.js frontend together:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) for the application and
+[http://localhost:8000/docs](http://localhost:8000/docs) for the API documentation.
+
+For later runs:
+
+```bash
+npm run db:up
+npm run dev
+```
+
+Press `Ctrl+C` to stop the application servers. To stop PostgreSQL as well, run
+`npm run db:down`.
+
+Individual development commands are also available:
+
+```bash
+npm run dev:backend
+npm run dev:frontend
+npm run db:status
+npm run db:migrate
+```
+
+---
+
 ## Local Installation & Environment Configuration
 
 ### 1. Clone and Install Root Quality Tooling
